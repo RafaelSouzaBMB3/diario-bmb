@@ -1,53 +1,131 @@
 const CACHE_NAME = "bmb3-v2";
 
 const APP_SHELL = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./icone-192.png",
-  "./icone-512.png",
-  "./apple-touch-icon.png"
+    "./",
+    "./index.html",
+    "./manifest.webmanifest",
+    "./icone-192.png",
+    "./icone-512.png",
+    "./apple-touch-icon.png"
 ];
 
-self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
-  );
-});
 
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      )
-    ).then(() => self.clients.claim())
-  );
-});
+self.addEventListener(
+    "install",
+    event => {
 
-self.addEventListener("fetch", event => {
+        event.waitUntil(
 
-  if (event.request.method !== "GET") {
-    return;
-  }
+            caches
+                .open(CACHE_NAME)
 
-  event.respondWith(
-    fetch(event.request)
-      .then(response => {
+                .then(cache => {
 
-        const copy = response.clone();
+                    return cache.addAll(APP_SHELL);
 
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, copy);
-        });
+                })
 
-        return response;
-      })
-      .catch(() => caches.match(event.request))
-  );
+                .then(() => {
 
-});
+                    return self.skipWaiting();
+
+                })
+
+        );
+
+    }
+);
+
+
+self.addEventListener(
+    "activate",
+    event => {
+
+        event.waitUntil(
+
+            caches
+                .keys()
+
+                .then(keys => {
+
+                    return Promise.all(
+
+                        keys
+
+                            .filter(
+                                key =>
+                                    key !== CACHE_NAME
+                            )
+
+                            .map(
+                                key =>
+                                    caches.delete(key)
+                            )
+
+                    );
+
+                })
+
+                .then(() => {
+
+                    return self.clients.claim();
+
+                })
+
+        );
+
+    }
+);
+
+
+self.addEventListener(
+    "fetch",
+    event => {
+
+        if (
+            event.request.method !== "GET"
+        ) {
+
+            return;
+
+        }
+
+
+        event.respondWith(
+
+            fetch(event.request)
+
+                .then(response => {
+
+                    const copy =
+                        response.clone();
+
+
+                    caches
+                        .open(CACHE_NAME)
+                        .then(cache => {
+
+                            cache.put(
+                                event.request,
+                                copy
+                            );
+
+                        });
+
+
+                    return response;
+
+                })
+
+                .catch(() => {
+
+                    return caches.match(
+                        event.request
+                    );
+
+                })
+
+        );
+
+    }
+);
